@@ -13,14 +13,20 @@ import torch_geometric
 from torch_geometric.utils import to_dense_batch
 from torch_geometric.loader import DataLoader as PyGLoader
 
+import torch._dynamo
+# Suppress Dynamo errors to fall back to eager ops
+torch._dynamo.config.suppress_errors = True
+
 import torchinfo
 from omegaconf import OmegaConf
+
+import wandb
 
 from utils import model_size
 from utils.losses import chamfer_dist_repulsion, density_chamfer_dist
 from utils.data import PCDDataset
-from pugcn_lib import PUGCN, PUInceptionTransformer
-# from pugcn_lib.models import JustUpsample  # if you want to switch models
+from pugcn_lib import PUGCN
+
 
 def train_one_epoch(model, loader, loss_fn, optimizer, gamma, device, k_loss):
     model.train()
@@ -59,6 +65,7 @@ def train_one_epoch(model, loader, loss_fn, optimizer, gamma, device, k_loss):
     avg_prop = (total_prop / len(loader.dataset)) if loss_fn == "cd_rep" else None
     return avg_loss, avg_prop
 
+
 def main():
     # ----- logging setup -----
     logging.basicConfig(
@@ -68,36 +75,37 @@ def main():
     )
     log = logging.getLogger()
 
-    log.info("Starting training script")
+    log.info("Starting training script with Weights & Biases logging")
     log.info(f"Python executable: {sys.executable}")
     log.info(f"Torch version: {torch.__version__}")
     log.info(f"PyG version:   {torch_geometric.__version__}")
 
     # ----- load config -----
     conf = OmegaConf.load(os.path.join("conf", "config.yaml"))
-    exp_conf   = conf
-    model_cfg  = exp_conf.model_config
-    train_cfg  = exp_conf.train_config
-    data_cfg   = exp_conf.data_config
+    model_cfg  = conf.model_config
+    train_cfg  = conf.train_config
+    data_cfg   = conf.data_config
 
-    log.info(f"Experiment name: {exp_conf.name}")
-    log.info("--- Config ---\n" + OmegaConf.to_yaml(exp_conf).strip())
+    log.info(f"Experiment name: {conf.name}")
+    log.info("--- Config ---\n" + OmegaConf.to_yaml(conf).strip())
+
+    # ----- init wandb -----
+    wandb.init(
+        project=conf.name,
+        config=OmegaConf.to_container(conf, resolve=True),
+        name=f"run-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    )
 
     # ----- dataset -----
-    h5file = data_cfg.path
-    log.info(f"Loading data from {h5file}")
+    log.info(f"Loading data from {data_cfg.path}")
     dataset = PCDDataset.from_h5(
-        h5file,
+        data_cfg.path,
         num_point=data_cfg.num_point,
         up_ratio=model_cfg.r,
         skip_rate=data_cfg.skip_rate,
         seed=data_cfg.rng_seed
     )
-    # for quick debug subset:
-    subset_size = min(len(dataset), data_cfg.debug_subset if "debug_subset" in data_cfg else len(dataset))
-    dataset = dataset if subset_size == len(dataset) else torch.utils.data.Subset(dataset, list(range(subset_size)))
     log.info(f"Dataset size: {len(dataset)} samples")
-
     loader = PyGLoader(dataset, batch_size=train_cfg.batch_size, follow_batch=["pos_s", "pos_t"])
 
     # ----- model -----
@@ -105,25 +113,17 @@ def main():
     log.info(f"Using device: {device}")
 
     model = PUGCN(**model_cfg).to(device)
-    # model = JustUpsample(**model_cfg).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=train_cfg.lr, betas=train_cfg.betas)
-
-    # optional torch.compile()
-    try:
-        model = torch.compile(model)
-        log.info("Model compiled with torch.compile()")
-    except Exception:
-        pass
 
     log.info("Model summary:")
     torchinfo.summary(model)
 
     # ----- prepare output dir -----
     ts = datetime.now().strftime("%Y-%m-%d-%H-%M")
-    out_dir = os.path.join("trained-models", f"{ts}-{exp_conf.name}")
+    out_dir = os.path.join("trained-models", f"{ts}-{conf.name}")
     os.makedirs(out_dir, exist_ok=True)
+    OmegaConf.save(config=conf, f=os.path.join(out_dir, "config.yaml"))
     log.info(f"Checkpoints & config will be saved to: {out_dir}")
-    OmegaConf.save(config=exp_conf, f=os.path.join(out_dir, "config.yaml"))
 
     # ----- training loop -----
     start_time = time.time()
@@ -141,19 +141,27 @@ def main():
             msg += f"  prop={prop:.4f}"
         log.info(msg)
 
+        # Log metrics to wandb
+        log_data = {"epoch": epoch, "loss": loss, "epoch_time": epoch_time}
+        if prop is not None:
+            log_data["prop"] = prop
+        wandb.log(log_data)
+
         if epoch == 1 or epoch % train_cfg.save_every == 0:
-            ckpt = {
-                "experiment_config": dict(exp_conf),
+            ckpt_path = os.path.join(out_dir, f"ckpt_epoch_{epoch}.pt")
+            torch.save({
                 "epoch": epoch,
                 "model_size": model_size(model, unit="KB"),
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
-            }
-            torch.save(ckpt, os.path.join(out_dir, f"ckpt_epoch_{epoch}.pt"))
-            log.info(f"Saved checkpoint epoch_{epoch}.pt")
+            }, ckpt_path)
+            log.info(f"Saved checkpoint {ckpt_path}")
+            wandb.save(ckpt_path)
 
     total_time = time.time() - start_time
     log.info(f"Training completed in {total_time:.2f} seconds")
+    wandb.summary["total_time"] = total_time
+    wandb.finish()
 
 if __name__ == "__main__":
     main()
