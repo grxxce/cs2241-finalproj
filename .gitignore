@@ -246,3 +246,5 @@ images/
 delete_*
 
 data/*
+
+wandb/*
