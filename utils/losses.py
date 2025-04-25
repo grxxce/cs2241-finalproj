@@ -1,4 +1,4 @@
-from hausdorff import hausdorff_distance
+# from hausdorff import hausdorff_distance
 from torch_geometric.utils import to_dense_batch
 from torch import Tensor, LongTensor
 import torch
@@ -8,6 +8,25 @@ import torch
 # )
 from einops import rearrange, reduce
 from torch_geometric.nn import knn_graph
+
+def hausdorff_distance(X, Y):
+    import numpy as np
+    # Convert tensors to numpy if needed
+    if hasattr(X, 'detach'):
+        X = X.detach().cpu().numpy()
+    if hasattr(Y, 'detach'):
+        Y = Y.detach().cpu().numpy()
+    
+    # Calculate pairwise distances
+    d_matrix = np.zeros((len(X), len(Y)))
+    for i in range(len(X)):
+        for j in range(len(Y)):
+            d_matrix[i, j] = np.linalg.norm(X[i] - Y[j])
+    
+    # Calculate Hausdorff distance
+    h1 = np.max(np.min(d_matrix, axis=1))
+    h2 = np.max(np.min(d_matrix, axis=0))
+    return max(h1, h2)
 
 
 def hausdorff_loss(p: Tensor, q: Tensor, batches: LongTensor = None):
