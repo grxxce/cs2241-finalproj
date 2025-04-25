@@ -248,3 +248,4 @@ delete_*
 data/*
 
 wandb/*
+results/*

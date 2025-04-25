@@ -6,7 +6,8 @@ import matplotlib
 matplotlib.use('Agg')
 import os
 os.environ['DISPLAY'] = ''
-
+import matplotlib.pyplot as plt
+from utils.viz import viz_many_mpl, point_cloud_three_views
 import sys
 import time
 import logging
@@ -53,27 +54,53 @@ model.eval()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model.to(device)
 
-# Quantitative evaluation
-input_dir = os.path.join('data', 'PU1K', 'test', 'input_256', 'input_256')
-gt_dir    = os.path.join('data', 'PU1K', 'test', 'input_256', 'gt_1024')
+input_dir = os.path.join('data','PU1K','test','input_256','input_256')
+gt_dir    = os.path.join('data','PU1K','test','input_256','gt_1024')
+
+# prepare output folders
+qual_dir  = os.path.join('images','qualitative', latest)
+views_dir = os.path.join('images','views',       latest)
+os.makedirs(qual_dir,  exist_ok=True)
+os.makedirs(views_dir, exist_ok=True)
 
 chamfers, dcds, hausdorffs, times = [], [], [], []
-for fname in tqdm(os.listdir(input_dir), desc='Evaluating'):
-    inp = torch.tensor(load_xyz_file(os.path.join(input_dir, fname)), dtype=torch.float32).to(device)
-    gt_  = torch.tensor(load_xyz_file(os.path.join(gt_dir, fname)), dtype=torch.float32).to(device)
 
-    start = time.time()
+for fname in tqdm(os.listdir(input_dir), desc='Evaluating'):
+    # load and move to device
+    inp = torch.tensor(load_xyz_file(os.path.join(input_dir, fname)), dtype=torch.float32).to(device)
+    gt  = torch.tensor(load_xyz_file(os.path.join(gt_dir,    fname)), dtype=torch.float32).to(device)
+
+    # inference + timing
+    t0 = time.time()
     with torch.no_grad():
         out = model(inp)
-    elapsed = time.time() - start
+    dt = time.time() - t0
+    times.append(dt)
 
-    dcd, _, cd = density_chamfer_dist(out.unsqueeze(0), gt_.unsqueeze(0), alpha=1000, n_lambda=0.5)
-    hd = hausdorff_loss(out, gt_)
-
+    # compute metrics
+    dcd, _, cd = density_chamfer_dist(out.unsqueeze(0), gt.unsqueeze(0), alpha=1000, n_lambda=0.5)
+    hd         = hausdorff_loss(out, gt)
     chamfers.append(cd.item())
     dcds.append(dcd.item())
     hausdorffs.append(hd.item())
-    times.append(elapsed)
+
+    # 1) Save the 3D scatter comparison
+    fig = plt.figure(figsize=(8,8))
+    ax  = fig.add_subplot(111, projection='3d')
+    viz_many_mpl(
+        [inp.cpu().numpy(), gt.cpu().numpy(), out.cpu().numpy()],
+        ax=ax
+    )
+    qual_path = os.path.join(qual_dir, fname.replace('.xyz', '.png'))
+    fig.savefig(qual_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    log.info(f"Saved qualitative viz → {qual_path}")
+
+    # 2) Save the multi-view “screenshots” as a single image
+    views_img = point_cloud_three_views(out.cpu().numpy())
+    mv_path   = os.path.join(views_dir, fname.replace('.xyz', '_views.png'))
+    plt.imsave(mv_path, views_img, cmap='gray', format='png')
+    log.info(f"Saved multi‐view viz → {mv_path}")
 
 # Aggregate metrics
 metrics = {
