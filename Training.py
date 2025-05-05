@@ -97,14 +97,21 @@ def main():
     )
 
     # ----- dataset -----
-    log.info(f"Loading data from {data_cfg.path}")
+    script_dir = os.getcwd()
+
+    data_path = os.path.join(script_dir, 'pu1k_fps256_uniform1024_from_meshes.h5')
+
+
+
+    # Load the dataset
     dataset = PCDDataset.from_h5(
-        data_cfg.path,
-        num_point=data_cfg.num_point,
-        up_ratio=model_cfg.r,
-        skip_rate=data_cfg.skip_rate,
-        seed=data_cfg.rng_seed
+        data_path,
+        num_point=256,        # this matches your input cloud size
+        up_ratio=4,           # this matches 256 → 1024 (adjust if needed)
+        skip_rate=1,          # or use data_config.skip_rate if defined
+        seed=42               # or use data_config.rng_seed if defined
     )
+
     log.info(f"Dataset size: {len(dataset)} samples")
     loader = PyGLoader(dataset, batch_size=train_cfg.batch_size, follow_batch=["pos_s", "pos_t"])
 
