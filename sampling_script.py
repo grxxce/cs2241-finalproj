@@ -160,13 +160,25 @@ experiments = [
 ]
 
 # Traverse all subdirectories and .off files
+test_mesh_dir = os.path.join(script_dir, 'data', 'PU1K_raw_meshes', 'test', 'original_meshes')
+
+
+# === Load test mesh names to exclude ===
+test_mesh_basenames = set()
+for file in os.listdir(test_mesh_dir):
+    if file.endswith('.off'):
+        test_mesh_basenames.add(os.path.splitext(file)[0])
+
+# === Collect mesh files to process ===
 mesh_files = []
 for subdir, _, files in os.walk(root_dir):
     for file in files:
         if file.endswith('.off'):
-            mesh_files.append(os.path.join(subdir, file))
+            mesh_basename = os.path.splitext(file)[0]
+            if mesh_basename not in test_mesh_basenames:
+                mesh_files.append(os.path.join(subdir, file))
 
-print(f"Found {len(mesh_files)} mesh files.")
+print(f"Found {len(mesh_files)} mesh files (excluding test set).")
 
 # Run each experiment
 for experiment in experiments:
