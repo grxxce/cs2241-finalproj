@@ -20,7 +20,7 @@ model_config:
 #Configuration for the training step
 train_config:
     batch_size: 64
-    epochs: 10
+    epochs: 100
     optimizer: "adam"
     lr: 0.001
     betas: [0.9, 0.999]

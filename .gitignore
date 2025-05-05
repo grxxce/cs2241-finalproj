@@ -249,3 +249,4 @@ data/*
 
 wandb/*
 results/*
+PU1K_raw_meshes/*
