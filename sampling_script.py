@@ -153,8 +153,7 @@ experiments = [
 ]
 
 # Traverse all subdirectories and .off files
-test_mesh_dir = os.path.join(script_dir, 'data', 'PU1K_raw_meshes', 'test', 'original_meshes')
-
+test_mesh_dir = os.path.join(script_dir, 'PU1K_raw_meshes', 'test', 'original_meshes')
 
 # === Load test mesh names to exclude ===
 test_mesh_basenames = set()
