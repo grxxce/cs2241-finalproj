@@ -31,7 +31,7 @@ train_config:
 
 # Configuration for loading the data
 data_config:
-    path: "./data/PU1K/train/pu1k_poisson_256_poisson_1024_pc_2500_patch50_addpugan.h5" # path to data directory
+    path: "./data/custom/pu1k_05radius_patch_uniform_to_fps.h5" # path to data directory
     num_point: 256 # number of points per sample
     skip_rate: 1
     use_randominput: True

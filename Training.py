@@ -99,10 +99,14 @@ def main():
     # ----- dataset -----
     script_dir = os.getcwd()
 
-    data_path = os.path.join(script_dir, 'data', 'custom', 'pu1k_patch_poisson_to_fps.h5')
-    # data_path = os.path.join(script_dir, 'pu1k_fps256_uniform1024_from_meshes.h5')
-
-
+    data_path = os.path.join(script_dir, 'data','PU1K', 'train', 'pu1k_poisson_256_poisson_1024_pc_2500_patch50_addpugan.h5')
+    # data_path = os.path.join(script_dir, 'data', 'custom', 'nosub_pu1k_05radius_patch_poisson_to_uniform.h5')
+    # data_path = os.path.join(script_dir, 'data', 'custom', 'pu1k_05radius_patch_uniform_to_fps.h5')
+    # data_path = os.path.join(script_dir, 'data', 'custom', 'nosub_pu1k_05radius_patch_uniform_to_uniform.h5')
+    # data_path = os.path.join(script_dir, 'data', 'custom', 'pu1k_05radius_patch_poisson_to_fps.h5')
+    # data_path = os.path.join(script_dir, 'data', 'custom', 'pu1k_05radius_patch_poisson_to_uniform.h5')
+    # data_path = os.path.join(script_dir, 'data', 'custom', 'pu1k_05radius_patch_uniform_to_uniform.h5')
+    
 
     # Load the dataset
     dataset = PCDDataset.from_h5(
