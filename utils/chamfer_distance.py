@@ -44,7 +44,8 @@ def chamfer_distance(p, q, return_raw=False):
     q_min, q_idx = torch.min(pq_dists, dim=1)  # Min dist from each q to any p
     
     # Compute Chamfer distances
-    cd_t = p_min.mean(dim=-1) + q_min.mean(dim=-1)  # Original Chamfer distance
+    # cd_t = p_min.mean(dim=-1) + q_min.mean(dim=-1)  # Original Chamfer distance
+    cd_t = (p_min ** 2).mean(dim=-1) + (q_min ** 2).mean(dim=-1)
     cd_p = torch.sqrt(p_min).mean(dim=-1) + torch.sqrt(q_min).mean(dim=-1)  # With sqrt
     
     if return_raw:

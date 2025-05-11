@@ -40,13 +40,25 @@ wandb.init(
 )
 
 # Set paths
-pred_dir = '../Grad-PU/output/2025-05-09T02:04:06.684641/test/4X'  # Your predictions directory
-gt_dir = '../Grad-PU/data/PU1K/test/input_2048/gt_8192'        # Ground truth directory
+run_id = '2025-05-09T02:04:06.684641'
+# run_id = '2025-05-09T01:59:20.532181' done
+# run_id = '2025-05-09T01:52:51.999337' done
+# run_id = '2025-05-09T01:50:28.252384' done
+
+# run_id = '2025-05-09T02:29:43.845555' done
+# run_id = '2025-05-09T02:33:14.232064' done
+# run_id = '2025-05-09T02:36:44.373272' done
+# run_id = '2025-05-09T02:44:27.350831' done
+
+# run_id = '2025-05-09T10:38:13.120407' done
+# run_id = '2025-05-09T13:07:49.844928'
+
+pred_dir = f'../Grad-PU/output/{run_id}/test/4X-256'  # Your predictions directory
+gt_dir = '../Grad-PU/data/PU1K/test/input_256/gt_1024'        # Ground truth directory
 
 # Prepare output folders for visualizations
-experiment_id = os.path.basename(pred_dir)
-qual_dir = os.path.join('images', 'qualitative', experiment_id)
-views_dir = os.path.join('images', 'views', experiment_id)
+qual_dir = os.path.join('images', 'qualitative', 'small', run_id)
+views_dir = os.path.join('images', 'views', 'small', run_id)
 os.makedirs(qual_dir, exist_ok=True)
 os.makedirs(views_dir, exist_ok=True)
 
@@ -92,6 +104,8 @@ for fname in tqdm(pred_files, desc='Evaluating'):
     
     dt = time.time() - t0
     times.append(dt)
+
+    print(f"cd: {cd.item()}, dcd: {dcd.item()}, hd: {hd.item()}")
     
     chamfers.append(cd.item())
     dcds.append(dcd.item())
@@ -102,7 +116,7 @@ for fname in tqdm(pred_files, desc='Evaluating'):
     ax = fig.add_subplot(111, projection='3d')
     
     # Load input point cloud if available
-    input_dir = os.path.join('data', 'PU1K', 'test', 'input_2048', 'input_2048')
+    input_dir = os.path.join('data', 'PU1K', 'test', 'input_256', 'input_256')
     input_path = os.path.join(input_dir, fname)
     if os.path.exists(input_path):
         inp = torch.tensor(load_xyz_file(input_path), dtype=torch.float32).cpu().numpy()
@@ -144,7 +158,7 @@ out_dir = 'results'
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-file_out = os.path.join(out_dir, f"results-{experiment_id}-{timestamp}.yaml")
+file_out = os.path.join(out_dir, f"results-{run_id}-{timestamp}.yaml")
 OmegaConf.save(results, file_out)
 log.info(f"Saved results: {file_out}")
 

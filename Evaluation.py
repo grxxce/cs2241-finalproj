@@ -42,8 +42,12 @@ wandb.init(
 
 # Load latest checkpoint
 models_dir = 'trained-models'
-latest = sorted(os.listdir(models_dir))[-6]
-ckpt_path = os.path.join(models_dir, latest, f"ckpt_epoch_30.pt")
+# latest = sorted(os.listdir(models_dir))[-8]
+# ckpt_path = os.path.join(models_dir, latest, f"ckpt_epoch_30.pt")
+
+latest = sorted(os.listdir(models_dir))[-1]
+ckpt_path = os.path.join(models_dir, latest, f"ckpt_epoch_25.pt")
+
 # ckpt_path = os.path.join(models_dir, latest, f"ckpt_epoch_{conf.train_config.epochs}.pt")
 log.info(f"Loading checkpoint: {ckpt_path}")
 checkpoint = torch.load(ckpt_path)

@@ -115,41 +115,41 @@ experiments = [
     #     'input_sampling': 'uniform',
     #     'patch_based': True
     # },
-    {
-        'name': 'patch_poisson_to_fps',
-        'description': 'Patch-based with Poisson GT sampling and FPS input subsampling',
-        'gt_sampling': 'poisson',
-        'input_sampling': 'fps',
-        'patch_based': True
-    },
-    {
-        'name': 'whole_uniform_to_uniform',
-        'description': 'Whole shape with uniform GT sampling and uniform input subsampling',
-        'gt_sampling': 'uniform',
-        'input_sampling': 'uniform',
-        'patch_based': False
-    },
-    {
-        'name': 'whole_uniform_to_fps',
-        'description': 'Whole shape with uniform GT sampling and FPS input subsampling',
-        'gt_sampling': 'uniform',
-        'input_sampling': 'fps',
-        'patch_based': False
-    },
-    {
-        'name': 'whole_poisson_to_uniform',
-        'description': 'Whole shape with Poisson GT sampling and uniform input subsampling',
-        'gt_sampling': 'poisson',
-        'input_sampling': 'uniform',
-        'patch_based': False
-    },
-    {
-        'name': 'whole_poisson_to_fps',
-        'description': 'Whole shape with Poisson GT sampling and FPS input subsampling',
-        'gt_sampling': 'poisson',
-        'input_sampling': 'fps',
-        'patch_based': False
-    }
+    # {
+    #     'name': 'patch_poisson_to_fps',
+    #     'description': 'Patch-based with Poisson GT sampling and FPS input subsampling',
+    #     'gt_sampling': 'poisson',
+    #     'input_sampling': 'fps',
+    #     'patch_based': True
+    # },
+    # {
+    #     'name': 'whole_uniform_to_uniform',
+    #     'description': 'Whole shape with uniform GT sampling and uniform input subsampling',
+    #     'gt_sampling': 'uniform',
+    #     'input_sampling': 'uniform',
+    #     'patch_based': False
+    # },
+    # {
+    #     'name': 'whole_uniform_to_fps',
+    #     'description': 'Whole shape with uniform GT sampling and FPS input subsampling',
+    #     'gt_sampling': 'uniform',
+    #     'input_sampling': 'fps',
+    #     'patch_based': False
+    # },
+    # {
+    #     'name': 'whole_poisson_to_uniform',
+    #     'description': 'Whole shape with Poisson GT sampling and uniform input subsampling',
+    #     'gt_sampling': 'poisson',
+    #     'input_sampling': 'uniform',
+    #     'patch_based': False
+    # },
+    # {
+    #     'name': 'whole_poisson_to_fps',
+    #     'description': 'Whole shape with Poisson GT sampling and FPS input subsampling',
+    #     'gt_sampling': 'poisson',
+    #     'input_sampling': 'fps',
+    #     'patch_based': False
+    # }
 ]
 
 # Traverse all subdirectories and .off files
